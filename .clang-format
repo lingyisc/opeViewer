@@ -1,0 +1,3 @@
+BasedOnStyle: Microsoft
+ColumnLimit: 240
+AlwaysBreakTemplateDeclarations: Yes

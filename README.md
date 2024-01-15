@@ -36,11 +36,13 @@ classDiagram
         camera
         slaves
     }
+    class Camera
     class Scene
     class Renderer
 
     Window o-- Viewport
-    Viewport *-- Renderer
+    Viewport *-- Camera
+    Camera *-- Renderer
     Viewport --> Scene
 ```
 

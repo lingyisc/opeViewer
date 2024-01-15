@@ -13,7 +13,7 @@
 using Window = opeViewerQt::OpenGLWidget;
 #else
 #include <opeViewerQt/OpenGLWindow.h>
-using Viewer = opeViewerQt::OpenGLWindow;
+using Window = opeViewerQt::OpenGLWindow;
 #endif
 
 #include <opeViewer/StatsHandler.h>

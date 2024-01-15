@@ -17,6 +17,7 @@
 #include <osgUtil/Statistics>
 #include <osgUtil/UpdateVisitor>
 
+#include "ComputeIntersection.h"
 #include "GraphicsWindow.h"
 #include "Scene.h"
 #include "Viewport.h"
@@ -156,27 +157,58 @@ void generatePointerData(Window *window, osgGA::GUIEventAdapter &event)
 
     event.setMouseYOrientationAndUpdateCoords(osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS);
 
-    typedef std::vector<osg::Camera *> CameraVector;
-    CameraVector activeCameras;
-
-    for (auto viewport : window->getViewports())
+    struct FindCamera
     {
-        osg::Camera *camera = viewport->getCamera();
-        if (camera->getAllowEventFocus() && camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER)
+        bool ContainsPos(osg::Camera *camera, float x, float y) const
         {
             osg::Viewport *viewport = camera->getViewport();
             if (viewport && x >= viewport->x() && y >= viewport->y() && x < (viewport->x() + viewport->width()) && y < (viewport->y() + viewport->height()))
             {
-                activeCameras.push_back(camera);
+                return true;
             }
+            return false;
         }
-    }
 
-    std::sort(activeCameras.begin(), activeCameras.end(), osg::CameraRenderOrderSortOp());
+        osg::Camera *operator()(Window *window, float x, float y) const
+        {
+            typedef std::vector<osg::Camera *> CameraVector;
+            CameraVector activeCameras;
+            for (auto viewport : window->getViewports())
+            {
+                osg::Camera *camera = viewport->getCamera();
+                if (camera->getAllowEventFocus() && ContainsPos(camera, x, y))
+                {
+                    activeCameras.push_back(camera);
+                }
+            }
+            std::sort(activeCameras.begin(), activeCameras.end(), osg::CameraRenderOrderSortOp());
+            return !activeCameras.empty() ? operator()(activeCameras.back()->getView(), x, y) : nullptr;
+        };
+        osg::Camera *operator()(osg::View *view, float x, float y) const
+        {
+            typedef std::vector<osg::Camera *> CameraVector;
+            CameraVector activeCameras;
+            // master
+            auto mastCamera = view->getCamera();
+            if (mastCamera->getAllowEventFocus() && mastCamera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER && ContainsPos(mastCamera, x, y))
+            {
+                activeCameras.push_back(mastCamera);
+            }
+            // slave
+            for (int i = 0; i < view->getNumSlaves(); ++i)
+            {
+                osg::Camera *camera = view->getSlave(i)._camera;
+                if (camera->getAllowEventFocus() && camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER && ContainsPos(camera, x, y))
+                {
+                    activeCameras.push_back(camera);
+                }
+            }
+            std::sort(activeCameras.begin(), activeCameras.end(), osg::CameraRenderOrderSortOp());
+            return activeCameras.empty() ? view->getCamera() /*这里要不要返回主相机？*/ : activeCameras.back();
+        };
+    };
 
-    osg::Camera *camera = activeCameras.empty() ? 0 : activeCameras.back();
-
-    if (camera)
+    if (auto camera = FindCamera{}(window, x, y))
     {
         osg::Viewport *viewport = camera->getViewport();
 
@@ -281,14 +313,14 @@ void Window::requestWarpPointer(float x, float y)
     throw std::logic_error("not implemented");
 }
 
-bool Window::computeIntersections(const osgGA::GUIEventAdapter &adapter, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
+bool Window::computeIntersections(const osgGA::GUIEventAdapter &ea, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
 {
-    throw std::logic_error("not implemented");
+    return opeViewer::computeIntersections(ea, intersections, mask);
 }
 
-bool Window::computeIntersections(const osgGA::GUIEventAdapter &adapter, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
+bool Window::computeIntersections(const osgGA::GUIEventAdapter &ea, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
 {
-    throw std::logic_error("not implemented");
+    return opeViewer::computeIntersections(ea, path, intersections, mask);
 }
 
 osg::GraphicsContext *Window::getGraphicsContext() const

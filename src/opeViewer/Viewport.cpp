@@ -11,6 +11,7 @@
 #include <osgGA/CameraManipulator>
 #include <osgUtil/Optimizer>
 
+#include "ComputeIntersection.h"
 #include "Renderer.h"
 #include "Scene.h"
 #include "Window.h"
@@ -75,14 +76,14 @@ void Viewport::requestWarpPointer(float x, float y)
     }
 }
 
-bool Viewport::computeIntersections(const osgGA::GUIEventAdapter &adapter, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
+bool Viewport::computeIntersections(const osgGA::GUIEventAdapter &ea, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
 {
-    throw std::logic_error("not implemented");
+    return opeViewer::computeIntersections(ea, intersections, mask);
 }
 
-bool Viewport::computeIntersections(const osgGA::GUIEventAdapter &adapter, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
+bool Viewport::computeIntersections(const osgGA::GUIEventAdapter &ea, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask)
 {
-    throw std::logic_error("not implemented");
+    return opeViewer::computeIntersections(ea, path, intersections, mask);
 }
 
 bool Viewport::requiresUpdateSceneGraph() const

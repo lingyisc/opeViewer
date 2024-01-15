@@ -78,9 +78,9 @@ class Viewport : public osg::View, public osgGA::GUIActionAdapter
 
     void requestWarpPointer(float x, float y) override;
 
-    bool computeIntersections(const osgGA::GUIEventAdapter &adapter, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask) override;
+    bool computeIntersections(const osgGA::GUIEventAdapter &ea, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask) override;
 
-    bool computeIntersections(const osgGA::GUIEventAdapter &adapter, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask) override;
+    bool computeIntersections(const osgGA::GUIEventAdapter &ea, const osg::NodePath &path, osgUtil::LineSegmentIntersector::Intersections &intersections, osg::Node::NodeMask mask) override;
 
     virtual bool requiresUpdateSceneGraph() const;
 

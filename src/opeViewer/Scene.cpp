@@ -192,21 +192,21 @@ void Scene::updateSceneGraph(osg::NodeVisitor &updateVisitor)
     if (!_sceneData)
         return;
 
-    if (getDatabasePager())
+    if (_databasePager && _databasePager->requiresUpdateSceneGraph())
     {
         // synchronize changes required by the DatabasePager thread to the scene graph
-        getDatabasePager()->updateSceneGraph((*updateVisitor.getFrameStamp()));
+        _databasePager->updateSceneGraph((*updateVisitor.getFrameStamp()));
     }
 
-    if (getImagePager())
+    if (_imagePager && _imagePager->requiresUpdateSceneGraph())
     {
         // synchronize changes required by the DatabasePager thread to the scene graph
-        getImagePager()->updateSceneGraph(*(updateVisitor.getFrameStamp()));
+        _imagePager->updateSceneGraph(*(updateVisitor.getFrameStamp()));
     }
 
     if (getSceneData())
     {
-        updateVisitor.setImageRequestHandler(getImagePager());
+        updateVisitor.setImageRequestHandler(_imagePager);
         getSceneData()->accept(updateVisitor);
     }
 

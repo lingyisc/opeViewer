@@ -195,7 +195,7 @@ class Window : public osg::Object, public osgGA::GUIActionAdapter
     void removeUpdateOperation(osg::Operation *operation);
 
     // 分发来自窗口系统的事件
-    bool event(osgGA::GUIEventAdapter &ea);
+    virtual bool event(osgGA::GUIEventAdapter &ea);
 
     virtual bool checkNeedToDoFrame();
 
@@ -207,8 +207,6 @@ class Window : public osg::Object, public osgGA::GUIActionAdapter
 
     virtual void requestWarpPointer(Viewport *viewport, float x, float y);
 
-    virtual void statsImplementation();
-
   protected:
     Window();
 
@@ -217,26 +215,28 @@ class Window : public osg::Object, public osgGA::GUIActionAdapter
 
     virtual ~Window();
 
-    void resized(int oldWidth, int oldHeight, int width, int height);
+    virtual void resized(int oldWidth, int oldHeight, int width, int height);
 
-    void init();
+    virtual void init();
 
     // 更新仿真时间
-    void updateSimulationTime(double simulationTime = USE_ELAPSED_TIME);
+    virtual void updateSimulationTime(double simulationTime = USE_ELAPSED_TIME);
 
     // 标记下一帧开始了
     // \note 不同于osgViewerBase，advance需要手动调用
-    void advance();
+    virtual void advance();
 
-    void frame();
+    virtual void frame();
 
-    void updateTraversal();
+    virtual void updateTraversal();
 
-    void renderingTraversals();
+    virtual void renderingTraversals();
 
-    void viewportsRenderingTraversals();
+    virtual void viewportsRenderingTraversals();
 
     void stats();
+
+    virtual void statsImplementation();
 };
 
 } // namespace opeViewer

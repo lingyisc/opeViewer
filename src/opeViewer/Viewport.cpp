@@ -113,18 +113,6 @@ bool Viewport::requiresRedraw() const
     return false;
 }
 
-void Viewport::setScene(Scene *scene)
-{
-    _scene = scene;
-
-    prepareSceneData();
-
-    // TODO
-    // computeActiveCoordinateSystemNodePath();
-
-    assignSceneDataToCameras();
-}
-
 Scene *Viewport::getScene()
 {
     return _scene.get();

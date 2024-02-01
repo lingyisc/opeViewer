@@ -86,8 +86,6 @@ class Viewport : public osg::View, public osgGA::GUIActionAdapter
 
     virtual bool requiresRedraw() const;
 
-    void setScene(Scene *scene);
-
     Scene *getScene();
 
     Scene *getScene() const;

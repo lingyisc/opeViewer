@@ -26,6 +26,7 @@ class WindowBase : public Base, public Window
   protected:
     osg::ref_ptr<GraphicsWindowQt> _graphicsWindowQt{};
     int _updateTimer{};
+    EventFilter *_eventFilter{};
 
   public:
     using Base::Base;
@@ -38,6 +39,8 @@ class WindowBase : public Base, public Window
   protected:
     using Window::resized;
 
+    bool event(QEvent *event) override;
+
     void initializeGL() override;
 
     void resizeGL(int w, int h) override;
@@ -48,15 +51,21 @@ class WindowBase : public Base, public Window
 };
 
 template <typename Base, typename Window>
+bool WindowBase<Base, Window>::event(QEvent *event)
+{
+    return _eventFilter->eventFilter(this, event) || Base::event(event);
+}
+
+template <typename Base, typename Window>
 void WindowBase<Base, Window>::setup()
 {
+    _eventFilter = new EventFilter(this, nullptr);
+    _eventFilter->setParent(this);
     _graphicsWindowQt = new GraphicsWindowQt(this);
     this->_graphicsContext = _graphicsWindowQt;
     _updateTimer = this->startTimer(1);
 
     this->connect(this, &Base::frameSwapped, [this] { this->advance(); });
-
-    this->installEventFilter(new EventFilter(this, this));
 }
 
 template <typename Base, typename Window>
@@ -71,6 +80,7 @@ void WindowBase<Base, Window>::initializeGL()
 {
     _graphicsWindowQt->realize();
     _graphicsWindowQt->setDefaultFboId(this->defaultFramebufferObject());
+    this->devicePixelRatioF();
 
     this->init();
     this->updateSimulationTime();

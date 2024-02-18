@@ -60,6 +60,7 @@ template <typename Base, typename Window>
 void WindowBase<Base, Window>::setup()
 {
     _eventFilter = new EventFilter(this, nullptr);
+    _eventFilter->setDevicePixelRatio(this->devicePixelRatioF());
     _eventFilter->setParent(this);
     _graphicsWindowQt = new GraphicsWindowQt(this);
     this->_graphicsContext = _graphicsWindowQt;
@@ -80,7 +81,6 @@ void WindowBase<Base, Window>::initializeGL()
 {
     _graphicsWindowQt->realize();
     _graphicsWindowQt->setDefaultFboId(this->defaultFramebufferObject());
-    this->devicePixelRatioF();
 
     this->init();
     this->updateSimulationTime();

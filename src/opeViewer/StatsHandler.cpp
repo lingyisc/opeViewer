@@ -1394,7 +1394,7 @@ void StatsHandler::setUpScene(Window *window, osg::Vec3 &pos)
         {
             Scene *scene = *itr;
             osgDB::DatabasePager *dp = scene->getDatabasePager();
-            if (dp && dp->isRunning())
+            if (dp /*&& dp->isRunning()*/)
             {
                 pos.y() -= (_characterSize + backgroundSpacing);
 

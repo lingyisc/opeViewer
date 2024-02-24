@@ -281,6 +281,16 @@ Window::Window(GraphicsWindow *graphicsContext) : _graphicsContext(graphicsConte
 
 Window::~Window()
 {
+    if (!_graphicsContext)
+    {
+        return;
+    }
+
+    for (auto &viewport : _viewports)
+    {
+        viewport->releaseGLObjects(_graphicsContext->getState());
+    }
+    _graphicsContext->close();
 }
 
 osg::Object *Window::cloneType() const
@@ -422,14 +432,8 @@ bool Window::removeViewportImplementation(Viewport *viewport)
 {
     if (auto iter = std::find(_viewports.begin(), _viewports.end(), viewport); iter != _viewports.end())
     {
+        viewport->releaseGLObjects(_graphicsContext->getState());
         viewport->setFrameStamp(nullptr);
-
-        // for (unsigned int i = 0; i < viewport->getNumSlaves(); ++i)
-        // {
-        //     viewport->getSlave(i)._camera->releaseGLObjects(_graphicsContext->getState());
-        // }
-        // viewport->getCamera()->releaseGLObjects(_graphicsContext->getState());
-
         viewport->setWindow(nullptr);
 
         _viewports.erase(iter);

@@ -47,6 +47,10 @@ class Renderer : public osg::GraphicsOperation
 
     void operator()(osg::GraphicsContext *context) override;
 
+    void resizeGLObjectBuffers(unsigned int i) override;
+
+    void releaseGLObjects(osg::State *state) const override;
+
     osg::Camera *getCamera();
 
     void setCompileOnNextDraw(bool compileOnNextDraw);

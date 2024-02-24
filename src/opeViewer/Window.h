@@ -80,7 +80,7 @@ class Window : public osg::Object, public osgGA::GUIActionAdapter
     using EventHandlers = std::list<osg::ref_ptr<osgGA::EventHandler>>;
 
   protected:
-    osg::GraphicsContext *_graphicsContext{};
+    osg::ref_ptr<osg::GraphicsContext> _graphicsContext{};
     std::vector<osg::ref_ptr<Viewport>> _viewports;
     std::set<Viewport *> _viewportsRequestContinuousUpdate{};
 

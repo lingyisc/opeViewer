@@ -173,6 +173,26 @@ void Renderer::operator()(osg::GraphicsContext *context)
     DEBUG_MESSAGE << "end Renderer() " << this << std::endl;
 }
 
+void Renderer::resizeGLObjectBuffers(unsigned int i)
+{
+    GraphicsOperation::resizeGLObjectBuffers(i);
+
+    if (_sceneView)
+    {
+        _sceneView->resizeGLObjectBuffers(i);
+    }
+}
+
+void Renderer::releaseGLObjects(osg::State *state) const
+{
+    GraphicsOperation::releaseGLObjects(state);
+
+    if (_sceneView)
+    {
+        _sceneView->releaseGLObjects(state);
+    }
+}
+
 osg::Camera *Renderer::getCamera()
 {
     return _camera.get();

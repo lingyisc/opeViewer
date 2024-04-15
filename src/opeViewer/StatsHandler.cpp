@@ -160,12 +160,6 @@ void StatsHandler::setEnabled(size_t statsTypeMask)
         return;
     }
 
-    if (!statsTypeMask)
-    {
-        _camera->setNodeMask(0);
-        return;
-    }
-
     auto window = _viewport->getWindow();
     std::vector<osg::Camera *> cameras;
     collectWhichCamerasToRenderStatsFor(window, cameras);
@@ -280,16 +274,22 @@ bool StatsHandler::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdap
 
     switch (ea.getEventType())
     {
+    case osgGA::GUIEventAdapter::FRAME: {
+        if (!_initialized && _statsTypeMask)
+        {
+            initialize(window);
+        }
+        if (_initialized && !_statsTypeMask)
+        {
+            reset();
+        }
+        break;
+    }
     case (osgGA::GUIEventAdapter::KEYDOWN): {
         if (ea.getKey() == _keyEventTogglesOnScreenStats)
         {
             if (window && window->getStats())
             {
-                if (!_initialized)
-                {
-                    initialize(window);
-                }
-
                 std::bitset<sizeof(void *) * 8> statsTypeBits(_statsTypeMask);
                 if (statsTypeBits.count() >= _statsTypeSize)
                 {
@@ -383,12 +383,11 @@ void StatsHandler::updateThreadingModelText()
 void StatsHandler::reset()
 {
     _initialized = false;
-    _camera = nullptr;
     if (_viewport && _viewport->getWindow())
     {
         _viewport->getWindow()->removeViewport(_viewport);
     }
-    _viewport = nullptr;
+    _camera->removeChild(_switch);
     _switch = nullptr;
     _statsGeode = nullptr;
     _threadingModelText = nullptr;

@@ -4,6 +4,8 @@
 
 #include "Window.h"
 
+#include <array>
+
 #include <osg/FrameStamp>
 #include <osg/Stats>
 #include <osg/TextureCubeMap>
@@ -169,8 +171,9 @@ void generatePointerData(Window *window, osgGA::GUIEventAdapter &event)
             return false;
         }
 
-        osg::Camera *operator()(Window *window, float x, float y) const
+        std::array<osg::Camera *, 2> operator()(Window *window, float x, float y) const
         {
+            // viewport level
             typedef std::vector<osg::Camera *> CameraVector;
             CameraVector activeCameras;
             for (auto viewport : window->getViewports())
@@ -182,18 +185,20 @@ void generatePointerData(Window *window, osgGA::GUIEventAdapter &event)
                 }
             }
             std::sort(activeCameras.begin(), activeCameras.end(), osg::CameraRenderOrderSortOp());
-            return !activeCameras.empty() ? operator()(activeCameras.back()->getView(), x, y) : nullptr;
-        };
+
+            std::array<osg::Camera *, 2> cameras{};
+            cameras[0] = activeCameras.empty() ? nullptr : activeCameras.front();
+
+            // camera level
+            cameras[1] = cameras[0] ? operator()(cameras[0]->getView(), x, y) : nullptr;
+
+            return cameras;
+        }
+
         osg::Camera *operator()(osg::View *view, float x, float y) const
         {
             typedef std::vector<osg::Camera *> CameraVector;
             CameraVector activeCameras;
-            // master
-            auto mastCamera = view->getCamera();
-            if (mastCamera->getAllowEventFocus() && mastCamera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER && ContainsPos(mastCamera, x, y))
-            {
-                activeCameras.push_back(mastCamera);
-            }
             // slave
             for (int i = 0; i < view->getNumSlaves(); ++i)
             {
@@ -203,24 +208,27 @@ void generatePointerData(Window *window, osgGA::GUIEventAdapter &event)
                     activeCameras.push_back(camera);
                 }
             }
+            // master
+            auto mastCamera = view->getCamera();
+            if (mastCamera->getAllowEventFocus() && mastCamera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER && ContainsPos(mastCamera, x, y))
+            {
+                activeCameras.push_back(mastCamera);
+            }
             std::sort(activeCameras.begin(), activeCameras.end(), osg::CameraRenderOrderSortOp());
-            return activeCameras.empty() ? view->getCamera() /*这里要不要返回主相机？*/ : activeCameras.back();
+            return activeCameras.empty() ? view->getCamera() : activeCameras.back();
         };
     };
 
-    if (auto camera = FindCamera{}(window, x, y))
+    if (auto [main, slave] = FindCamera{}(window, x, y); main)
     {
-        osg::Viewport *viewport = camera->getViewport();
+        osg::Viewport *viewport = main->getViewport();
 
-        event.addPointerData(new osgGA::PointerData(camera, (x - viewport->x()) / (viewport->width() - 1) * 2.0f - 1.0f, -1.0, 1.0, (y - viewport->y()) / (viewport->height() - 1) * 2.0f - 1.0f, -1.0, 1.0));
-
-        auto view = camera->getView();
-        osg::Camera *view_masterCamera = view ? view->getCamera() : 0;
+        event.addPointerData(new osgGA::PointerData(main, (x - viewport->x()) / (viewport->width() - 1) * 2.0f - 1.0f, -1.0, 1.0, (y - viewport->y()) / (viewport->height() - 1) * 2.0f - 1.0f, -1.0, 1.0));
 
         // if camera isn't the master it must be a slave and could need reprojecting.
-        if (view && camera != view_masterCamera)
+        if (slave && slave != main)
         {
-            generateSlavePointerData(camera, event);
+            generateSlavePointerData(slave, event);
         }
     }
 }
@@ -242,22 +250,25 @@ void reprojectPointerData(osgGA::GUIEventAdapter &source_event, osgGA::GUIEventA
 
     dest_event.setMouseYOrientationAndUpdateCoords(osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS);
 
-    osg::Object *object = (source_event.getNumPointerData() >= 2) ? source_event.getPointerData(1)->object.get() : 0;
-    osg::Camera *camera = object ? object->asCamera() : 0;
-    osg::Viewport *viewport = camera ? camera->getViewport() : 0;
-
-    if (!viewport)
-        return;
-
-    dest_event.addPointerData(new osgGA::PointerData(camera, (x - viewport->x()) / (viewport->width() - 1) * 2.0f - 1.0f, -1.0, 1.0, (y - viewport->y()) / (viewport->height() - 1) * 2.0f - 1.0f, -1.0, 1.0));
-
-    auto view = camera->getView();
-    osg::Camera *view_masterCamera = view ? view->getCamera() : 0;
-
-    // if camera isn't the master it must be a slave and could need reprojecting.
-    if (view && camera != view_masterCamera)
+    for (int i = 0; i < source_event.getNumPointerData(); ++i)
     {
-        generateSlavePointerData(camera, dest_event);
+        auto obj = source_event.getPointerData(i)->object.get();
+        auto camera = obj ? obj->asCamera() : nullptr;
+        osg::Viewport *viewport = camera ? camera->getViewport() : nullptr;
+
+        if (viewport)
+        {
+            dest_event.addPointerData(new osgGA::PointerData(camera, (x - viewport->x()) / (viewport->width() - 1) * 2.0f - 1.0f, -1.0, 1.0, (y - viewport->y()) / (viewport->height() - 1) * 2.0f - 1.0f, -1.0, 1.0));
+
+            auto view = camera->getView();
+            osg::Camera *view_masterCamera = view ? view->getCamera() : 0;
+
+            // if camera isn't the master it must be a slave and could need reprojecting.
+            if (view && camera != view_masterCamera)
+            {
+                generateSlavePointerData(camera, dest_event);
+            }
+        }
     }
 }
 

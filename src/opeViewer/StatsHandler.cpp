@@ -145,7 +145,7 @@ void StatsHandler::collectWhichCamerasToRenderStatsFor(Window *window, std::vect
             continue;
         }
         cameras.push_back(viewport->getCamera());
-        for (auto i = 0; viewport->getNumSlaves(); ++i)
+        for (auto i = 0; i < viewport->getNumSlaves(); ++i)
         {
             cameras.push_back(viewport->getSlave(i)._camera);
         }

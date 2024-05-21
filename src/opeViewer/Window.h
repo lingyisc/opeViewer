@@ -84,6 +84,7 @@ class Window : public osg::Object, public osgGA::GUIActionAdapter
     std::vector<osg::ref_ptr<Viewport>> _viewports;
     std::set<Viewport *> _viewportsRequestContinuousUpdate{};
 
+    bool _done{};
     bool _inited{};
 
     osg::Timer_t _startTick{};

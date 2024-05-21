@@ -72,6 +72,10 @@ void WindowBase<Base, Window>::setup()
 template <typename Base, typename Window>
 void WindowBase<Base, Window>::requestRedraw()
 {
+    if (Window::_done)
+    {
+        return;
+    }
     // qDebug() << "update";
     this->update();
 }

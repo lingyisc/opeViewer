@@ -292,6 +292,7 @@ Window::Window(GraphicsWindow *graphicsContext) : _graphicsContext(graphicsConte
 
 Window::~Window()
 {
+    _done = true;
     if (!_graphicsContext)
     {
         return;
@@ -816,6 +817,11 @@ bool Window::checkNeedToDoFrame()
 
 void Window::requestRedraw(Viewport *viewport)
 {
+    if (_done)
+    {
+        return;
+    }
+    // TODO 在窗口关闭的时候，这里可能会崩溃；增加了done标志，不知道还会不会崩溃
     requestRedraw();
 }
 

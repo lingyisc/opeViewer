@@ -48,11 +48,23 @@ class WindowBase : public Base, public Window
     void paintGL() override;
 
     void timerEvent(QTimerEvent *event) override;
+
+    virtual void reduceFrameRate();
+
+    virtual void restoreFrameRate();
 };
 
 template <typename Base, typename Window>
 bool WindowBase<Base, Window>::event(QEvent *event)
 {
+    if (event->type() == QEvent::WindowActivate)
+    {
+        restoreFrameRate();
+    }
+    else if (event->type() == QEvent::WindowDeactivate)
+    {
+        reduceFrameRate();
+    }
     return _eventFilter->eventFilter(this, event) || Base::event(event);
 }
 
@@ -122,6 +134,20 @@ void WindowBase<Base, Window>::timerEvent(QTimerEvent *event)
             this->update();
         }
     }
+}
+
+template <typename Base, typename Window>
+void WindowBase<Base, Window>::reduceFrameRate()
+{
+    this->killTimer(_updateTimer);
+    _updateTimer = this->startTimer(250);
+}
+
+template <typename Base, typename Window>
+void WindowBase<Base, Window>::restoreFrameRate()
+{
+    this->killTimer(_updateTimer);
+    _updateTimer = this->startTimer(1);
 }
 
 } // namespace opeViewerQt

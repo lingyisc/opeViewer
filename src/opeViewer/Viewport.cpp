@@ -52,6 +52,11 @@ Window *Viewport::getWindow() const
     return _window;
 }
 
+osg::View *Viewport::asView()
+{
+    return this;
+}
+
 void Viewport::requestRedraw()
 {
     if (_window)

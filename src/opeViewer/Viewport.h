@@ -72,6 +72,8 @@ class Viewport : public osg::View, public osgGA::GUIActionAdapter
 
     Window *getWindow() const;
 
+    osg::View *asView() override;
+
     void requestRedraw() override;
 
     void requestContinuousUpdate(bool needed) override;

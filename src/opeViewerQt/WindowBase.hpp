@@ -65,6 +65,11 @@ bool WindowBase<Base, Window>::event(QEvent *event)
     {
         reduceFrameRate();
     }
+    else if (event->type() == QEvent::Resize)
+    {
+        Base::event(event);
+        return _eventFilter->eventFilter(this, event);
+    }
     return _eventFilter->eventFilter(this, event) || Base::event(event);
 }
 

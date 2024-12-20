@@ -5,9 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_compile_options($<$<BOOL:${MSVC}>:/utf-8>)
 
+option(OPE_VIEWER_BUILD_EXAMPLES "Build examples" ON)
+
 if(NOT ${CMAKE_PROJECT_NAME} STREQUAL opeViewer)
   add_subdirectory(src)
-  add_subdirectory(examples)
+  if(OPE_VIEWER_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+  endif()
   return()
 endif()
 
@@ -25,4 +29,6 @@ find_package(Qt5 5.12 COMPONENTS Widgets)
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(src)
-add_subdirectory(examples)
+if(OPE_VIEWER_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()

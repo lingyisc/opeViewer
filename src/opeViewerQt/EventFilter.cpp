@@ -101,8 +101,13 @@ class ButtonMap
         {
         case Qt::LeftButton:
             return osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         case Qt::MidButton:
             return osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
+#else
+        case Qt::MiddleButton:
+            return osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
+#endif
         case Qt::RightButton:
             return osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON;
         case Qt::NoButton:
@@ -118,10 +123,17 @@ class ButtonMap
         {
             masks |= osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON;
         }
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         if (Qt::MidButton & buttons)
         {
             masks |= osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
         }
+#else
+        if (Qt::MiddleButton & buttons)
+        {
+            masks |= osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
+        }
+#endif
         if (Qt::RightButton & buttons)
         {
             masks |= osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON;
@@ -243,6 +255,8 @@ bool EventFilter::eventFilter(QObject *watched, QEvent *event)
     case QEvent::Wheel: {
         auto wheelEvent = static_cast<QWheelEvent *>(event);
         updateModKeyMask(wheelEvent, _accumulateEventState);
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         _accumulateEventState->setX(wheelEvent->x() * _devicePixelRatio);
         _accumulateEventState->setY(wheelEvent->y() * _devicePixelRatio);
 
@@ -254,6 +268,34 @@ bool EventFilter::eventFilter(QObject *watched, QEvent *event)
         ea->setEventType(GUIEventAdapter::SCROLL);
         ea->setButtonMask(mapToOsg(wheelEvent->buttons()));
         ea->setScrollingMotion(motion);
+#else
+        _accumulateEventState->setX(wheelEvent->position().x() * _devicePixelRatio);
+        _accumulateEventState->setY(wheelEvent->position().y() * _devicePixelRatio);
+
+        if (wheelEvent->hasPixelDelta())
+        {
+            auto pixelDelta = wheelEvent->pixelDelta();
+            float deltaX = pixelDelta.x() * _devicePixelRatio;
+            float deltaY = pixelDelta.y() * _devicePixelRatio;
+
+            ea = new GUIEventAdapter(*_accumulateEventState);
+            ea->setEventType(GUIEventAdapter::SCROLL);
+            ea->setButtonMask(mapToOsg(wheelEvent->buttons()));
+            ea->setScrollingMotionDelta(deltaX, deltaY);
+        }
+        else
+        {
+            auto d_x = wheelEvent->angleDelta().x();
+            auto d_y = wheelEvent->angleDelta().y();
+            
+            auto motion = d_x != 0 ? (d_x > 0 ? osgGA::GUIEventAdapter::SCROLL_LEFT : osgGA::GUIEventAdapter::SCROLL_RIGHT) : (d_y > 0 ? osgGA::GUIEventAdapter::SCROLL_UP : osgGA::GUIEventAdapter::SCROLL_DOWN);
+
+            ea = new GUIEventAdapter(*_accumulateEventState);
+            ea->setEventType(GUIEventAdapter::SCROLL);
+            ea->setButtonMask(mapToOsg(wheelEvent->buttons()));
+            ea->setScrollingMotion(motion);
+        }
+#endif
         break;
     }
     default:
